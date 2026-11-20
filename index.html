@@ -59,7 +59,7 @@
   #demoBanner{background:#111827;color:#fff;top:auto;bottom:16px}
 
   /* 핀 */
-  .pin{position:relative;width:var(--s);height:var(--s);border-radius:50%;background:var(--c);border:1.5px solid #fff;
+  .pin{position:relative;width:var(--s);height:var(--s);border-radius:50%;background:var(--c);border:2px solid #fff;
        box-shadow:0 1px 3px rgba(0,0,0,.45);cursor:pointer;transition:transform .12s}
   .pin:hover{transform:scale(1.3)}
   .pin.sel{transform:scale(1.6);box-shadow:0 0 0 2px #111827,0 1px 4px rgba(0,0,0,.5)}
@@ -199,9 +199,9 @@ const CONFIG = {
 // 지도 동그라미: '출력' 칸 기준 (1kW 이상 / 1kW 미만 / 입력 안 됨·단위 없음)
 const POWER_FIELD = '출력';
 const POWER_STYLE = {
-  high:    { color:'#dc2626', size:14, label:'1kW 이상' },
-  low:     { color:'#2563eb', size:10, label:'1kW 미만' },
-  unknown: { color:'#9ca3af', size:10, label:'출력 확인 필요' }
+  high:    { color:'#dc2626', size:18, label:'1kW 이상' },
+  low:     { color:'#2563eb', size:13, label:'1kW 미만' },
+  unknown: { color:'#9ca3af', size:13, label:'출력 확인 필요' }
 };
 // 매체별 색깔 (상세 카드·검색 결과의 매체 표시에 쓰입니다)
 const MEDIA_COLORS = { 'TV':'#2563eb', 'UHD':'#7c3aed', 'FM':'#16a34a', 'AM':'#ea580c', 'DMB':'#db2777' };
