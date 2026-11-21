@@ -71,9 +71,9 @@
           font-size:10px;line-height:15px;text-align:center;font-weight:700;pointer-events:none}
   .pin.sel .n{transform:scale(.65)}
   #mapWrap.far .pin .lbl{display:none}
-  .ref{position:relative;width:14px;height:13px;pointer-events:none;opacity:.8}
+  .ref{position:relative;width:22px;height:20px;pointer-events:none;opacity:.85}
   .ref svg{display:block}
-  .ref .lbl{position:absolute;left:17px;top:50%;transform:translateY(-50%);white-space:nowrap;font-size:11px;color:#4b5563;
+  .ref .lbl{position:absolute;left:25px;top:50%;transform:translateY(-50%);white-space:nowrap;font-size:11px;color:#4b5563;
             text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 3px #fff}
   #mapWrap.mid .ref .lbl{display:none}
   .tpin{width:24px;height:32px;color:#111827;filter:drop-shadow(0 2px 2px rgba(0,0,0,.3));animation:bob 1s ease-in-out infinite}
@@ -495,7 +495,7 @@ function applyData(j){
 
 /* ---------- 지도에 그리기 ---------- */
 const PIN_SVG = '<svg viewBox="0 0 24 32" width="24" height="32"><path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 20 12 20s12-11 12-20C24 5.4 18.6 0 12 0z" fill="currentColor" stroke="#fff" stroke-width="1.6"/><circle cx="12" cy="12" r="4.6" fill="#fff"/></svg>';
-const TRI_SVG = '<svg width="14" height="13" viewBox="0 0 14 13"><path d="M7 1.2 L13 11.8 H1 Z" fill="#374151" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg>';
+const TRI_SVG = '<svg width="22" height="20" viewBox="0 0 14 13"><path d="M7 1.2 L13 11.8 H1 Z" fill="#374151" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg>';
 
 function circleEl(color, size, label, title, count){
   const el = document.createElement('div');
@@ -606,7 +606,7 @@ function renderFilters(){
     });
     lg.innerHTML = Object.entries(JUDGE).map(([k, j]) => `<span><i style="--c:${j.color};--s:${RX_PIN_SIZE}px"></i>${k} ${jc[k] || 0}</span>`).join('')
       + (none ? `<span><i style="--c:${JUDGE_NONE.color};--s:${RX_PIN_SIZE}px"></i>${JUDGE_NONE.label} ${none}</span>` : '')
-      + (stations.length ? `<span>${TRI_SVG.replace('width="14" height="13"', 'width="11" height="10"')}송중계소</span>` : '');
+      + (stations.length ? `<span>${TRI_SVG.replace('width="22" height="20"', 'width="13" height="12"')}송중계소</span>` : '');
   }
   nav.appendChild(lg);
 }
