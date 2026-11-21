@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>송중계소 지도</title>
+<title>송중계소·수신지점 지도</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
   :root{
@@ -22,6 +22,9 @@
   /* 상단 바 */
   #topbar{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--card);border-bottom:1px solid var(--line);z-index:20}
   #title{font-size:17px;font-weight:700;margin:0;white-space:nowrap}
+  .tabs{display:flex;background:#f1f5f9;border-radius:10px;padding:3px;gap:2px;flex:none}
+  .tab{border:none;background:transparent;padding:6px 12px;border-radius:8px;font-weight:600;color:var(--muted);white-space:nowrap}
+  .tab.on{background:#fff;color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
   #searchWrap{position:relative;flex:1;min-width:0;max-width:460px}
   #search{width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:#f9fafb;outline:none}
   #search:focus{border-color:var(--accent);background:#fff}
@@ -39,10 +42,8 @@
   #filters{display:flex;gap:6px;padding:8px 12px;background:var(--card);border-bottom:1px solid var(--line);overflow-x:auto;z-index:15;scrollbar-width:none}
   #filters::-webkit-scrollbar{display:none}
   .chip{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;border:1px solid var(--line);background:#fff;white-space:nowrap;font-size:13px}
-  .chip .dot{width:10px;height:10px;border-radius:50%;background:var(--c)}
   .chip .cnt{color:var(--muted);font-size:12px}
   .chip.off{opacity:.4}
-  .chip.off .dot{background:#cbd5e1}
 
   /* 지도 영역 */
   #mapWrap{position:relative;flex:1;min-height:0}
@@ -55,10 +56,10 @@
   .banner{position:absolute;left:50%;transform:translateX(-50%);top:10px;z-index:12;padding:8px 10px 8px 14px;border-radius:999px;
           box-shadow:var(--shadow);display:flex;align-items:center;gap:10px;font-size:13px;max-width:calc(100% - 24px)}
   #editBanner{background:var(--edit);color:#fff;font-weight:600}
-  #editBanner button{border:none;background:rgba(255,255,255,.25);color:#fff;border-radius:999px;padding:4px 10px}
-  #demoBanner{background:#111827;color:#fff;top:auto;bottom:16px}
+  #editBanner button{border:none;background:rgba(255,255,255,.25);color:#fff;border-radius:999px;padding:4px 10px;white-space:nowrap;flex:none}
+  #demoBanner,#rxBanner{background:#111827;color:#fff;top:auto;bottom:16px}
 
-  /* 핀 */
+  /* 지도 표시 */
   .pin{position:relative;width:var(--s);height:var(--s);border-radius:50%;background:var(--c);border:2px solid #fff;
        box-shadow:0 1px 3px rgba(0,0,0,.45);cursor:pointer;transition:transform .12s}
   .pin:hover{transform:scale(1.3)}
@@ -66,12 +67,21 @@
   .pin .lbl{position:absolute;left:calc(100% + 5px);top:50%;transform:translateY(-50%);white-space:nowrap;font-size:12px;font-weight:600;color:#111827;
             text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 3px #fff,0 0 3px #fff;pointer-events:none}
   .pin.sel .lbl{font-size:8px}
+  .pin .n{position:absolute;right:-8px;top:-8px;min-width:15px;height:15px;padding:0 3px;border-radius:8px;background:#111827;color:#fff;
+          font-size:10px;line-height:15px;text-align:center;font-weight:700;pointer-events:none}
+  .pin.sel .n{transform:scale(.65)}
   #mapWrap.far .pin .lbl{display:none}
+  .ref{position:relative;width:14px;height:13px;pointer-events:none;opacity:.8}
+  .ref svg{display:block}
+  .ref .lbl{position:absolute;left:17px;top:50%;transform:translateY(-50%);white-space:nowrap;font-size:11px;color:#4b5563;
+            text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 3px #fff}
+  #mapWrap.mid .ref .lbl{display:none}
   .tpin{width:24px;height:32px;color:#111827;filter:drop-shadow(0 2px 2px rgba(0,0,0,.3));animation:bob 1s ease-in-out infinite}
   .tpin svg{display:block}
   .legend{display:flex;align-items:center;gap:12px;margin-left:auto;padding-left:12px;font-size:12px;color:var(--muted);white-space:nowrap}
   .legend span{display:inline-flex;align-items:center;gap:5px}
   .legend i{display:inline-block;width:calc(var(--s) * .7);height:calc(var(--s) * .7);border-radius:50%;background:var(--c);border:1.5px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.15)}
+  .legend svg{display:block}
   @keyframes bob{50%{transform:translateY(-4px)}}
   .me-dot{width:16px;height:16px;border-radius:50%;background:#3b82f6;border:3px solid #fff;box-shadow:0 0 0 6px rgba(59,130,246,.25)}
 
@@ -81,12 +91,11 @@
 
   /* 패널 */
   .panel{position:absolute;z-index:30;background:var(--card);box-shadow:var(--shadow);border-radius:var(--radius);display:flex;flex-direction:column;overflow:hidden}
-  #sheet{left:12px;top:12px;bottom:12px;width:380px}
+  #sheet{left:12px;top:12px;bottom:12px;width:390px}
   body.list-open #sheet{left:344px}
   #listPanel{left:12px;top:12px;bottom:12px;width:320px}
-  .panel[hidden]{display:none}
   .p-head{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}
-  .p-head h2{margin:0;font-size:17px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+  .p-head h2{margin:0;font-size:17px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .p-close{border:none;background:#f3f4f6;width:30px;height:30px;border-radius:8px;font-size:16px;flex:none}
   .p-body{padding:14px 16px;overflow:auto;flex:1}
   .p-foot{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:8px;flex-wrap:wrap}
@@ -108,15 +117,32 @@
   .edit-only{display:none}
   body.editing .edit-only{display:flex}
 
+  /* 수신지점 상세 */
+  .pinfo{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:12px}
+  .mcard{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:10px}
+  .mcard.dim{opacity:.45}
+  .mh{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+  .mt{font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .mcard table.spec th{width:46%;padding:6px 8px 6px 0}
+  .mcard table.spec td{padding:6px 0}
+  .mcard table.spec tr:last-child th,.mcard table.spec tr:last-child td{border-bottom:none}
+  .acts{display:none;gap:6px;margin-top:8px}
+  body.editing .acts{display:flex}
+  .sec-title{font-size:12px;color:var(--muted);margin:4px 0 8px;font-weight:600}
+
   /* 입력 폼 */
   .field{margin-bottom:12px}
-  .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
-  .field label .req{color:var(--danger)}
+  .field label,.field .flabel{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+  .field .req{color:var(--danger)}
   .field input,.field textarea{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;outline:none;background:#fff}
   .field input:focus,.field textarea:focus{border-color:var(--accent)}
   .field textarea{min-height:70px;resize:vertical}
+  .seg{display:flex;flex-wrap:wrap;gap:6px}
+  .seg button{padding:7px 13px;border:1px solid var(--line);border-radius:9px;background:#fff;min-width:44px}
+  .seg button.on{background:var(--c, var(--accent));border-color:var(--c, var(--accent));color:#fff;font-weight:600}
   .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .hint{font-size:12px;color:var(--muted);background:#f8fafc;border-radius:9px;padding:9px 11px;margin-bottom:12px;line-height:1.5}
+  .form-pt{font-weight:600;margin-bottom:12px}
 
   /* 목록 */
   .li{display:flex;gap:10px;padding:10px 6px;border-bottom:1px solid #f1f5f9;cursor:pointer;border-radius:8px}
@@ -128,7 +154,6 @@
 
   /* 모달, 토스트 */
   #modal{position:fixed;inset:0;background:rgba(15,23,42,.45);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px}
-  #modal[hidden]{display:none}
   #modal .box{background:#fff;border-radius:var(--radius);width:100%;max-width:380px;padding:20px;box-shadow:var(--shadow)}
   #modal h3{margin:0 0 10px;font-size:16px}
   #modal .m-body{color:#374151;line-height:1.6;margin-bottom:16px}
@@ -144,13 +169,17 @@
   /* 모바일 */
   @media (max-width:720px){
     #topbar{flex-wrap:wrap;gap:8px}
-    #title{font-size:16px;flex:1}
+    #title{display:none}
+    .tabs{flex:1}
+    .tab{flex:1;padding:7px 6px}
     #searchWrap{order:3;flex-basis:100%;max-width:none}
     .tb-btn{padding:7px 10px}
-    #sheet,#listPanel,body.list-open #sheet{left:0;right:0;bottom:0;top:auto;width:auto;max-height:68%;border-radius:18px 18px 0 0}
+    #sheet,#listPanel,body.list-open #sheet{left:0;right:0;bottom:0;top:auto;width:auto;max-height:70%;border-radius:18px 18px 0 0}
     #sheet .p-head::before,#listPanel .p-head::before{content:"";position:absolute;left:50%;top:6px;width:36px;height:4px;border-radius:2px;background:#d1d5db;transform:translateX(-50%)}
     .p-head{position:relative;padding-top:18px}
-    #demoBanner{bottom:70px}
+    #demoBanner,#rxBanner{bottom:70px}
+    .banner{font-size:12px;border-radius:14px;width:max-content}
+    #toast{bottom:auto;top:130px}
     .row2{grid-template-columns:1fr}
   }
 </style>
@@ -158,7 +187,11 @@
 <body>
 
 <header id="topbar">
-  <h1 id="title">송중계소 지도</h1>
+  <h1 id="title">송중계소·수신지점 지도</h1>
+  <div class="tabs" role="tablist">
+    <button class="tab on" data-mode="st">① 송중계소</button>
+    <button class="tab" data-mode="rx">② 수신지점</button>
+  </div>
   <div id="searchWrap">
     <input id="search" type="search" placeholder="국소명·주소 검색, 또는 산 이름으로 이동" autocomplete="off">
     <div id="searchResults" hidden></div>
@@ -171,8 +204,9 @@
 <main id="mapWrap">
   <div id="map"></div>
   <div id="mapMsg" hidden></div>
-  <div class="banner" id="editBanner" hidden><span id="editBannerText">편집 모드 · 지도를 눌러 새 송중계소를 추가하세요</span><button id="btnEditOff">끝내기</button></div>
+  <div class="banner" id="editBanner" hidden><span id="editBannerText"></span><button id="btnEditOff">끝내기</button></div>
   <div class="banner" id="demoBanner" hidden>예시 모드 · 구글 시트가 아직 연결되지 않았어요 (추가한 내용은 새로고침하면 사라져요)</div>
+  <div class="banner" id="rxBanner" hidden>수신지점을 저장하려면 구글 Apps Script를 새 버전(Code.gs 2판)으로 바꿔 주세요</div>
   <div id="fabs">
     <button class="fab" id="btnFit" title="전체 보기">⤢</button>
     <button class="fab" id="btnMyLoc" title="내 위치">◎</button>
@@ -187,63 +221,104 @@
 
 <script>
 /* =========================================================
-   ▼▼▼ 설정: 여기 세 줄만 채우면 됩니다 ▼▼▼
+   ▼▼▼ 설정 ▼▼▼
    ========================================================= */
 const CONFIG = {
-  KAKAO_JS_KEY: '387c58ebfbe029da14c01c2dab8a6678',          // 카카오 디벨로퍼스의 "JavaScript 키"
-  API_URL: 'https://script.google.com/macros/s/AKfycbxY9TQnHdkXk_XJQr03MufilQVV6e6xEYKKpUCguXEBDY6N3z4_lHCJXK2e03APsZjZ/exec',             // 구글 Apps Script 웹 앱 URL (https://script.google.com/macros/s/…/exec)
-  TITLE: '송중계소 지도'      // 화면 위쪽 제목
+  KAKAO_JS_KEY: '387c58ebfbe029da14c01c2dab8a6678',   // 카카오 디벨로퍼스의 "JavaScript 키"
+  API_URL: 'https://script.google.com/macros/s/AKfycbxY9TQnHdkXk_XJQr03MufilQVV6e6xEYKKpUCguXEBDY6N3z4_lHCJXK2e03APsZjZ/exec', // 구글 Apps Script 웹 앱 URL
+  TITLE: '송중계소·수신지점 지도'                         // 화면 위쪽 제목
 };
 /* ========================================================= */
 
+/* ---------- ① 송중계소 설정 ---------- */
 // 지도 동그라미: '출력' 칸 기준 (1kW 이상 / 1kW 미만 / 입력 안 됨·단위 없음)
 const POWER_FIELD = '출력';
 const POWER_STYLE = {
   high:    { color:'#dc2626', size:22, label:'1kW 이상' },
   low:     { color:'#2563eb', size:16, label:'1kW 미만' },
-  unknown: { color:'#9ca3af', size:16, label:'출력 확인 필요' }
+  unknown: { color:'#9ca3af', size:19, label:'출력 확인 필요' }
 };
 // 매체별 색깔 (상세 카드·검색 결과의 매체 표시에 쓰입니다)
-const MEDIA_COLORS = { 'TV':'#2563eb', 'UHD':'#7c3aed', 'FM':'#16a34a', 'AM':'#ea580c', 'DMB':'#db2777' };
+const MEDIA_COLORS = { 'TV':'#2563eb', 'DTV':'#2563eb', 'UHD':'#7c3aed', 'FM':'#16a34a', 'AM':'#ea580c', 'DMB':'#db2777' };
 const EXTRA_COLORS = ['#0891b2','#ca8a04','#4f46e5','#be123c','#059669','#9333ea','#475569','#c2410c'];
-// 입력할 때 보여줄 추천 값
 const SUGGEST = {
   '매체': ['TV','UHD','FM','AM','DMB'],
   '구분': ['송신소','중계소','간이중계소'],
   '편파': ['수평','수직','원편파','혼합']
 };
 const F = { id:'id', media:'매체', name:'국소명', lat:'위도', lng:'경도', addr:'주소', updated:'수정일시', memo:'비고' };
-const NOT_IN_FORM = new Set([F.id, F.updated]);
-const NOT_IN_DETAIL = new Set([F.id, F.media, F.name, F.lat, F.lng, F.updated]);
+const ST_NOT_IN_FORM = new Set([F.id, F.updated]);
+const ST_NOT_IN_DETAIL = new Set([F.id, F.media, F.name, F.lat, F.lng, F.updated]);
 
+/* ---------- ② 수신지점 설정 ---------- */
+const R = { id:'id', pid:'지점id', name:'지점명', lat:'위도', lng:'경도', addr:'주소', media:'매체', judge:'판정',
+            target:'대상 송신소', time:'측정일시', who:'측정자', ch:'채널/주파수', bc:'방송사', memo:'비고', updated:'수정일시' };
+const RX_MEDIA = ['UHD','DTV','DMB','FM'];
+// 매체를 고르면 아래 칸만 추가로 보여 줍니다 (여기 없는 칸은 매체와 상관없이 항상 보여요)
+const RX_MEDIA_FIELDS = {
+  'UHD': ['MER(dB)','SNR(dB)'],
+  'DTV': ['MER(dB)','SNR(dB)'],
+  'DMB': ['SNR(dB)','BER'],
+  'FM':  ['음질(1~5점)','다중경로']
+};
+// 판정별 동그라미 색. 한 지점에 측정이 여러 개면 가장 나쁜 판정 색으로 표시합니다.
+const JUDGE = {
+  '양호': { color:'#16a34a', rank:1 },
+  '보통': { color:'#f59e0b', rank:2 },
+  '불량': { color:'#dc2626', rank:3 }
+};
+const JUDGE_NONE = { color:'#9ca3af', label:'판정 없음' };
+const RX_PIN_SIZE = 19;
+const RX_SEGMENTS = { '매체': RX_MEDIA, '판정': Object.keys(JUDGE), '음질(1~5점)': ['1','2','3','4','5'], '다중경로': ['무','유'] };
+const RX_SYSTEM = new Set([R.id, R.pid, R.updated]);
+const RX_LOCATION = [R.name, R.lat, R.lng, R.addr];
+const RX_CARD_SKIP = new Set([R.id, R.pid, R.name, R.lat, R.lng, R.addr, R.media, R.bc, R.ch, R.judge, R.updated]);
+const RX_DEFAULT_HEADERS = ['id','지점id','지점명','위도','경도','주소','측정일시','측정자','매체','방송사','채널/주파수','대상 송신소',
+  '수신안테나높이(m)','전계강도(dBμV/m)','MER(dB)','SNR(dB)','BER','음질(1~5점)','다중경로','판정','비고','수정일시'];
+
+/* ---------- 예시 데이터 (구글 시트 연결 전에만 쓰임) ---------- */
 const DEMO = !CONFIG.API_URL;
-const DEMO_HEADERS = ['id','매체','방송사','국소명','구분','채널/주파수','출력','안테나높이(m)','해발고(m)','편파','주소','위도','경도','비고','수정일시'];
-let demoRows = [
-  {id:'demo01',매체:'TV',방송사:'예시방송',국소명:'예시 송신소 A',구분:'송신소','채널/주파수':'CH 17','출력':'10 kW','안테나높이(m)':'60','해발고(m)':'630',편파:'수평',주소:'(예시 데이터)',위도:'37.4447',경도:'126.9636',비고:'예시입니다. 지우거나 고쳐 보세요.',수정일시:''},
+const DEMO_ST_HEADERS = ['id','매체','방송사','국소명','구분','채널/주파수','출력','안테나높이(m)','해발고(m)','편파','주소','위도','경도','비고','수정일시'];
+let demoSt = [
+  {id:'demo01',매체:'TV',방송사:'예시방송',국소명:'예시 송신소 A',구분:'송신소','채널/주파수':'CH 17','출력':'10 kW','안테나높이(m)':'60','해발고(m)':'630',편파:'수평',주소:'(예시 데이터)',위도:'37.4447',경도:'126.9636',비고:'',수정일시:''},
   {id:'demo02',매체:'FM',방송사:'예시방송',국소명:'예시 FM 중계소 B',구분:'중계소','채널/주파수':'95.9 MHz','출력':'1 kW','안테나높이(m)':'40','해발고(m)':'262',편파:'원편파',주소:'(예시 데이터)',위도:'37.5512',경도:'126.9882',비고:'',수정일시:''},
-  {id:'demo03',매체:'DMB',방송사:'예시방송',국소명:'예시 DMB 중계소 C',구분:'중계소','채널/주파수':'12A','출력':'500 W','안테나높이(m)':'30','해발고(m)':'150',편파:'수직',주소:'(예시 데이터)',위도:'37.2910',경도:'127.0090',비고:'',수정일시:''},
-  {id:'demo04',매체:'UHD',방송사:'예시방송',국소명:'예시 UHD 송신소 D',구분:'송신소','채널/주파수':'CH 28','출력':'5 kW','안테나높이(m)':'50','해발고(m)':'598',편파:'수평',주소:'(예시 데이터)',위도:'36.3100',경도:'127.4900',비고:'',수정일시:''}
+  {id:'demo03',매체:'DMB',방송사:'예시방송',국소명:'예시 DMB 중계소 C',구분:'중계소','채널/주파수':'12A','출력':'500 W','안테나높이(m)':'30','해발고(m)':'150',편파:'수직',주소:'(예시 데이터)',위도:'37.2910',경도:'127.0090',비고:'',수정일시:''}
+];
+let demoRx = [
+  {id:'m1',지점id:'p1',지점명:'예시 수신지점 1',위도:'37.4800',경도:'127.0200',주소:'(예시 데이터)',측정일시:'2026-11-20 10:30',측정자:'홍길동',매체:'UHD',방송사:'예시방송','채널/주파수':'CH 17','대상 송신소':'예시 송신소 A','수신안테나높이(m)':'10','전계강도(dBμV/m)':'72.5','MER(dB)':'28.1','SNR(dB)':'27.4',판정:'양호',비고:''},
+  {id:'m2',지점id:'p1',지점명:'예시 수신지점 1',위도:'37.4800',경도:'127.0200',주소:'(예시 데이터)',측정일시:'2026-11-20 10:45',측정자:'홍길동',매체:'FM',방송사:'예시방송','채널/주파수':'95.9 MHz','대상 송신소':'예시 FM 중계소 B','수신안테나높이(m)':'10','전계강도(dBμV/m)':'55.0','음질(1~5점)':'3','다중경로':'유',판정:'보통',비고:'건물 반사 있음'},
+  {id:'m3',지점id:'p2',지점명:'예시 수신지점 2',위도:'37.3900',경도:'127.1100',주소:'(예시 데이터)',측정일시:'2026-11-20 13:10',측정자:'홍길동',매체:'DMB',방송사:'예시방송','채널/주파수':'12A','대상 송신소':'예시 DMB 중계소 C','전계강도(dBμV/m)':'38.2','SNR(dB)':'8.5','BER':'1.2E-3',판정:'불량',비고:''},
+  {id:'m4',지점id:'p3',지점명:'예시 수신지점 3',위도:'37.5300',경도:'126.9000',주소:'(예시 데이터)',측정일시:'2026-11-20 15:00',측정자:'홍길동',매체:'DTV',방송사:'예시방송','채널/주파수':'CH 17','대상 송신소':'예시 송신소 A','전계강도(dBμV/m)':'65.0','MER(dB)':'25.0','SNR(dB)':'24.0',판정:'양호',비고:''}
 ];
 
 /* ---------- 상태 ---------- */
 let map, geocoder, places;
-let headers = [], stations = [];
-const pins = new Map();          // id → {overlay, el}
-const hiddenMedia = new Set();
-let selectedId = null, editMode = false, password = null;
-let tempOverlay = null, meOverlay = null, moveTargetId = null;
-let firstLoad = true, sheetMode = null; // 'detail' | 'form'
+let mode = 'st';                                   // 'st' = ① 송중계소, 'rx' = ② 수신지점
+let stHeaders = [], stations = [];
+let rxHeaders = RX_DEFAULT_HEADERS.slice(), meas = [], points = [];
+let rxSupported = true;
+const pins = new Map();                            // 'st:id' | 'rx:pid' | 'ref:id' → {overlay, el, z}
+const hidden = { st: new Set(), rx: new Set() };   // 필터로 숨긴 매체
+let selected = null;                               // {type:'st'|'rx', id}
+let selKey = null, editMode = false, password = null;
+let tempOverlay = null, meOverlay = null, moveTarget = null, lines = [];
+let firstLoad = true, sheetMode = null;            // 'detail' | 'form'
 
 /* ---------- 도우미 ---------- */
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const num = v => { const n = parseFloat(String(v ?? '').trim()); return Number.isFinite(n) ? n : NaN; };
-const mediaOf = s => String(s[F.media] ?? '').trim() || '미분류';
+const str = v => String(v ?? '').trim();
+const mediaOf = r => str(r['매체']) || '미분류';
+const hasCoords = r => Number.isFinite(num(r['위도'])) && Number.isFinite(num(r['경도']));
 function colorOf(media){
   const key = String(media).toUpperCase();
   for (const k in MEDIA_COLORS) if (k.toUpperCase() === key) return MEDIA_COLORS[k];
   let h = 0; for (const ch of String(media)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
   return EXTRA_COLORS[h % EXTRA_COLORS.length];
+}
+function mediaSort(order){
+  return (a, b) => { const ia = order.indexOf(a), ib = order.indexOf(b); return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib) || a.localeCompare(b, 'ko'); };
 }
 // "10 kW", "500W", "1,000 W", "0.5킬로와트" → 와트(W) 숫자. 단위가 없으면 NaN
 function powerW(v){
@@ -258,13 +333,32 @@ function powerClass(s){
   if (!Number.isFinite(w)) return 'unknown';
   return w >= 1000 ? 'high' : 'low';
 }
+// 가장 나쁜 판정 → {key, color} 또는 null
+function worstJudge(items){
+  let best = null;
+  items.forEach(it => { const k = str(it[R.judge]); const j = JUDGE[k]; if (j && (!best || j.rank > best.rank)) best = { key:k, ...j }; });
+  return best;
+}
+function judgeColor(k){ return (JUDGE[str(k)] || JUDGE_NONE).color; }
+function distKm(a1, o1, a2, o2){
+  const r = Math.PI / 180, dA = (a2 - a1) * r, dO = (o2 - o1) * r;
+  const x = Math.sin(dA / 2) ** 2 + Math.cos(a1 * r) * Math.cos(a2 * r) * Math.sin(dO / 2) ** 2;
+  return 6371 * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
+}
+function nowStr(){ return new Date().toLocaleString('sv-SE', { timeZone:'Asia/Seoul' }).slice(0, 16); }
 function toast(msg, isErr){
   const t = $('#toast'); t.textContent = msg; t.className = 'show' + (isErr ? ' err' : '');
   clearTimeout(toast._t); toast._t = setTimeout(() => t.className = '', isErr ? 4500 : 2400);
 }
 function store(k, v){ try { v == null ? sessionStorage.removeItem(k) : sessionStorage.setItem(k, v); } catch(_){} }
 function load(k){ try { return sessionStorage.getItem(k); } catch(_){ return null; } }
+function lsSet(k, v){ try { localStorage.setItem(k, v); } catch(_){} }
+function lsGet(k){ try { return localStorage.getItem(k) || ''; } catch(_){ return ''; } }
 function isMobile(){ return window.matchMedia('(max-width:720px)').matches; }
+function kakaoLink(kind, name, lat, lng){
+  return `https://map.kakao.com/link/${kind}/${encodeURIComponent(String(name || '위치').replace(/,/g, ' '))},${lat},${lng}`;
+}
+function setHash(h){ try { history.replaceState(null, '', h ? '#' + h : location.pathname + location.search); } catch(_){} }
 
 /* ---------- 모달 ---------- */
 function modal({ title, body, ok = '확인', cancel = '취소', danger = false, input = null }){
@@ -304,8 +398,13 @@ function loadKakao(){
 function showMapMsg(html){ const m = $('#mapMsg'); m.innerHTML = '<div class="box">' + html + '</div>'; m.hidden = false; }
 
 /* ---------- 데이터 통신 ---------- */
+function demoData(extra = {}){
+  return { ok:true, ...extra,
+    stations: { headers: DEMO_ST_HEADERS.slice(), rows: demoSt.map(r => ({...r})) },
+    measurements: { headers: RX_DEFAULT_HEADERS.slice(), rows: demoRx.map(r => ({...r})) } };
+}
 async function fetchData(){
-  if (DEMO) return { ok:true, headers: DEMO_HEADERS.slice(), rows: demoRows.map(r => ({...r})) };
+  if (DEMO) return demoData();
   const res = await fetch(CONFIG.API_URL + (CONFIG.API_URL.includes('?') ? '&' : '?') + 't=' + Date.now());
   const j = await res.json();
   if (!j.ok) throw new Error(j.error || '불러오기 실패');
@@ -322,145 +421,227 @@ async function api(action, payload = {}, pw = password){
   if (!j.ok) throw new Error(j.error || '저장 실패');
   return j;
 }
-function demoApi(action, { id, record = {} } = {}){
-  const now = new Date().toLocaleString('sv-SE', { timeZone:'Asia/Seoul' }).slice(0,16);
-  let newId = null;
-  if (action === 'add'){ newId = 'demo' + Math.random().toString(36).slice(2,8); demoRows.push({ ...record, id:newId, 수정일시:now }); }
-  if (action === 'update'){ const r = demoRows.find(x => x.id === id); if (r) Object.assign(r, record, { 수정일시:now }); }
-  if (action === 'delete'){ demoRows = demoRows.filter(x => x.id !== id); }
-  return Promise.resolve({ ok:true, id:newId, headers: DEMO_HEADERS.slice(), rows: demoRows.map(r => ({...r})) });
+function demoApi(action, { sheet = 'st', id, record = {}, field, value } = {}){
+  if (action === 'check') return Promise.resolve({ ok:true });
+  const now = nowStr();
+  const rid = () => Math.random().toString(36).slice(2, 10);
+  let arr = sheet === 'rx' ? demoRx : demoSt, newId = null, newPid = null;
+  if (action === 'add'){
+    newId = rid(); const row = { ...record, id:newId, 수정일시:now };
+    if (sheet === 'rx'){ newPid = str(record[R.pid]) || rid(); row[R.pid] = newPid; }
+    arr.push(row);
+  }
+  if (action === 'update'){ const r = arr.find(x => x.id === id); if (r) Object.assign(r, record, { 수정일시:now }); }
+  if (action === 'delete'){ arr = arr.filter(x => x.id !== id); }
+  if (action === 'updateWhere'){ arr.filter(x => str(x[field]) === String(value)).forEach(r => Object.assign(r, record, { 수정일시:now })); }
+  if (action === 'deleteWhere'){ arr = arr.filter(x => str(x[field]) !== String(value)); }
+  if (sheet === 'rx') demoRx = arr; else demoSt = arr;
+  return Promise.resolve(demoData({ id:newId, pid:newPid }));
 }
 
 async function refresh(showMsg){
   const btn = $('#btnRefresh'); btn.innerHTML = '<span class="spin"></span>';
   try {
     applyData(await fetchData());
-    if (showMsg) toast(`${stations.length}개 국소를 불러왔어요`);
+    if (showMsg) toast(mode === 'st' ? `송중계소 ${stations.length}곳을 불러왔어요` : `수신지점 ${points.length}곳을 불러왔어요`);
   } catch(e){
     toast('데이터를 불러오지 못했어요: ' + e.message, true);
   } finally { btn.textContent = '↻'; }
 }
 
+function groupPoints(rows){
+  const m = new Map();
+  rows.forEach(r => {
+    const key = str(r[R.pid]) || '_' + [str(r[R.name]), num(r[R.lat]).toFixed(5), num(r[R.lng]).toFixed(5)].join('|');
+    if (!m.has(key)) m.set(key, { pid:key, name:str(r[R.name]), lat:num(r[R.lat]), lng:num(r[R.lng]), addr:str(r[R.addr]), items:[] });
+    m.get(key).items.push(r);
+  });
+  const order = mediaSort(RX_MEDIA);
+  m.forEach(p => p.items.sort((a, b) => order(mediaOf(a), mediaOf(b)) || str(b[R.time]).localeCompare(str(a[R.time]))));
+  return [...m.values()];
+}
+
 function applyData(j){
-  headers = (j.headers || []).filter(Boolean);
-  stations = (j.rows || []).filter(r => r[F.id] && Number.isFinite(num(r[F.lat])) && Number.isFinite(num(r[F.lng])));
-  const skipped = (j.rows || []).length - stations.length;
-  drawPins(); renderFilters(); renderList();
-  if (selectedId && sheetMode === 'detail'){
-    const s = stations.find(x => x[F.id] === selectedId);
-    s ? openDetail(s, false) : closeSheet();
+  const st = j.stations || { headers: j.headers || [], rows: j.rows || [] };
+  rxSupported = !!j.measurements;
+  const rx = j.measurements || { headers: RX_DEFAULT_HEADERS.slice(), rows: [] };
+  stHeaders = (st.headers || []).filter(Boolean);
+  stations = (st.rows || []).filter(r => r[F.id] && hasCoords(r));
+  rxHeaders = (rx.headers || []).filter(Boolean);
+  meas = (rx.rows || []).filter(r => r[R.id] && hasCoords(r));
+  points = groupPoints(meas);
+  const skipped = (st.rows || []).length - stations.length + (rx.rows || []).length - meas.length;
+  $('#rxBanner').hidden = !(mode === 'rx' && !rxSupported);
+
+  redraw(); renderFilters(); renderList();
+  if (selected && sheetMode === 'detail'){
+    if (selected.type === 'st'){ const s = stations.find(x => x[F.id] === selected.id); s ? openStDetail(s) : closeSheet(); }
+    else { const p = points.find(x => x.pid === selected.id); p ? openRxDetail(p) : closeSheet(); }
   }
   if (firstLoad){
     firstLoad = false;
-    const hashId = decodeURIComponent(location.hash.slice(1));
-    const target = hashId && stations.find(x => x[F.id] === hashId);
-    if (target){ map.setLevel(6); select(target[F.id]); }
-    else fitAll();
+    const h = decodeURIComponent(location.hash.slice(1));
+    if (h === 'rx' || h.startsWith('p-')){
+      setMode('rx', { keepView:true });
+      const p = h.startsWith('p-') && points.find(x => x.pid === h.slice(2));
+      if (p){ map.setLevel(6); select('rx', p.pid); } else fitAll();
+    } else {
+      const s = h && stations.find(x => x[F.id] === h);
+      if (s){ map.setLevel(6); select('st', s[F.id]); } else fitAll();
+    }
     if (skipped > 0) toast(`위도·경도가 비어 있는 ${skipped}개 행은 지도에 표시하지 않았어요`);
   }
 }
 
-/* ---------- 핀 그리기 ---------- */
+/* ---------- 지도에 그리기 ---------- */
 const PIN_SVG = '<svg viewBox="0 0 24 32" width="24" height="32"><path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 20 12 20s12-11 12-20C24 5.4 18.6 0 12 0z" fill="currentColor" stroke="#fff" stroke-width="1.6"/><circle cx="12" cy="12" r="4.6" fill="#fff"/></svg>';
-function makePinEl(cls, label){
-  const st = POWER_STYLE[cls];
+const TRI_SVG = '<svg width="14" height="13" viewBox="0 0 14 13"><path d="M7 1.2 L13 11.8 H1 Z" fill="#374151" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg>';
+
+function circleEl(color, size, label, title, count){
   const el = document.createElement('div');
   el.className = 'pin';
-  el.style.setProperty('--c', st.color); el.style.setProperty('--s', st.size + 'px');
-  el.title = st.label;
-  el.innerHTML = '<span class="lbl"></span>';
+  el.style.setProperty('--c', color); el.style.setProperty('--s', size + 'px');
+  if (title) el.title = title;
+  el.innerHTML = '<span class="lbl"></span>' + (count > 1 ? `<span class="n">${count}</span>` : '');
   el.querySelector('.lbl').textContent = label || '';
   return el;
 }
-function drawPins(){
-  pins.forEach(p => p.overlay.setMap(null)); pins.clear();
-  for (const s of stations){
-    const cls = powerClass(s);
-    const el = makePinEl(cls, s[F.name] || '(이름 없음)');
-    const id = s[F.id];
-    const z = cls === 'high' ? 4 : 3;   // 큰 빨간 동그라미가 위에 오도록
-    el.addEventListener('click', ev => { ev.stopPropagation(); select(id); });
-    const overlay = new kakao.maps.CustomOverlay({
-      position: new kakao.maps.LatLng(num(s[F.lat]), num(s[F.lng])),
-      content: el, xAnchor: 0.5, yAnchor: 0.5, clickable: true, zIndex: z
+function addOverlay(key, lat, lng, el, z, clickable, onClick){
+  if (onClick) el.addEventListener('click', ev => { ev.stopPropagation(); onClick(); });
+  const overlay = new kakao.maps.CustomOverlay({ position: new kakao.maps.LatLng(lat, lng), content: el, xAnchor: .5, yAnchor: .5, clickable, zIndex: z });
+  overlay.setMap(map);
+  pins.set(key, { overlay, el, z });
+}
+function redraw(){
+  pins.forEach(p => p.overlay.setMap(null)); pins.clear(); selKey = null;
+  if (mode === 'st'){
+    stations.forEach(s => {
+      if (hidden.st.has(mediaOf(s))) return;
+      const cls = powerClass(s), st = POWER_STYLE[cls];
+      addOverlay('st:' + s[F.id], num(s[F.lat]), num(s[F.lng]), circleEl(st.color, st.size, s[F.name] || '(이름 없음)', st.label),
+        cls === 'high' ? 4 : 3, true, () => select('st', s[F.id]));
     });
-    overlay.setMap(hiddenMedia.has(mediaOf(s)) ? null : map);
-    if (id === selectedId){ el.classList.add('sel'); overlay.setZIndex(10); }
-    pins.set(id, { overlay, el, z });
+  } else {
+    // 송중계소는 참고용 ▲ 로 흐리게
+    stations.forEach(s => {
+      const el = document.createElement('div'); el.className = 'ref';
+      el.innerHTML = TRI_SVG + '<span class="lbl"></span>'; el.querySelector('.lbl').textContent = s[F.name] || '';
+      addOverlay('ref:' + s[F.id], num(s[F.lat]), num(s[F.lng]), el, 1, false, null);
+    });
+    points.forEach(p => {
+      const vis = p.items.filter(it => !hidden.rx.has(mediaOf(it)));
+      if (!vis.length) return;
+      const wj = worstJudge(vis);
+      addOverlay('rx:' + p.pid, p.lat, p.lng, circleEl(wj ? wj.color : JUDGE_NONE.color, RX_PIN_SIZE, p.name || '(이름 없음)', wj ? wj.key : JUDGE_NONE.label, vis.length),
+        wj ? 3 + wj.rank : 3, true, () => select('rx', p.pid));
+    });
   }
+  if (selected) markSelected(selected.type + ':' + selected.id);
+}
+function markSelected(key){
+  if (selKey && pins.get(selKey)){ const p = pins.get(selKey); p.el.classList.remove('sel'); p.overlay.setZIndex(p.z); }
+  selKey = key;
+  const p = key && pins.get(key);
+  if (p){ p.el.classList.add('sel'); p.overlay.setZIndex(10); }
 }
 function fitAll(){
-  const vis = stations.filter(s => !hiddenMedia.has(mediaOf(s)));
-  if (!vis.length) return;
-  if (vis.length === 1){ map.setLevel(7); map.setCenter(new kakao.maps.LatLng(num(vis[0][F.lat]), num(vis[0][F.lng]))); return; }
+  const pts = mode === 'st'
+    ? stations.filter(s => !hidden.st.has(mediaOf(s))).map(s => [num(s[F.lat]), num(s[F.lng])])
+    : points.filter(p => p.items.some(it => !hidden.rx.has(mediaOf(it)))).map(p => [p.lat, p.lng]);
+  if (!pts.length) return;
+  if (pts.length === 1){ map.setLevel(7); map.setCenter(new kakao.maps.LatLng(pts[0][0], pts[0][1])); return; }
   const b = new kakao.maps.LatLngBounds();
-  vis.forEach(s => b.extend(new kakao.maps.LatLng(num(s[F.lat]), num(s[F.lng]))));
+  pts.forEach(([a, o]) => b.extend(new kakao.maps.LatLng(a, o)));
   map.setBounds(b, 60, 60, 60, 60);
 }
 
-/* ---------- 매체 필터 ---------- */
+/* ---------- 메뉴 전환 ---------- */
+function setMode(m, opts = {}){
+  if (mode === m && !opts.force) return;
+  closeSheet(); endMove(); clearTemp();
+  mode = m;
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.dataset.mode === m));
+  $('#search').value = ''; $('#searchResults').hidden = true;
+  $('#search').placeholder = m === 'st' ? '국소명·주소 검색, 또는 산 이름으로 이동' : '지점명·주소 검색, 또는 장소 이름으로 이동';
+  $('#editBannerText').textContent = editBannerText();
+  $('#rxBanner').hidden = !(m === 'rx' && !rxSupported);
+  redraw(); renderFilters(); renderList();
+  if (!opts.keepView) fitAll();
+  setHash(m === 'rx' ? 'rx' : '');
+}
+function editBannerText(){
+  return mode === 'st' ? '편집 모드 · 지도를 눌러 새 송중계소를 추가하세요' : '편집 모드 · 지도를 눌러 새 수신지점을 추가하세요';
+}
+
+/* ---------- 필터 & 범례 ---------- */
 function renderFilters(){
+  const rows = mode === 'st' ? stations : meas;
   const counts = {};
-  stations.forEach(s => { const m = mediaOf(s); counts[m] = (counts[m] || 0) + 1; });
-  const order = Object.keys(MEDIA_COLORS);
-  const medias = Object.keys(counts).sort((a, b) => {
-    const ia = order.indexOf(a), ib = order.indexOf(b);
-    return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib) || a.localeCompare(b, 'ko');
-  });
+  rows.forEach(r => { const m = mediaOf(r); counts[m] = (counts[m] || 0) + 1; });
+  const medias = Object.keys(counts).sort(mediaSort(mode === 'st' ? Object.keys(MEDIA_COLORS) : RX_MEDIA));
+  const set = hidden[mode];
   const nav = $('#filters'); nav.innerHTML = '';
   const all = document.createElement('button');
-  all.className = 'chip'; all.innerHTML = `전체 <span class="cnt">${stations.length}</span>`;
-  all.onclick = () => { hiddenMedia.clear(); updateVisibility(); };
+  all.className = 'chip'; all.innerHTML = `전체 <span class="cnt">${rows.length}</span>`;
+  all.onclick = () => { set.clear(); updateVisibility(); };
   nav.appendChild(all);
   medias.forEach(m => {
     const b = document.createElement('button');
-    b.className = 'chip' + (hiddenMedia.has(m) ? ' off' : '');
+    b.className = 'chip' + (set.has(m) ? ' off' : '');
     b.innerHTML = `${esc(m)} <span class="cnt">${counts[m]}</span>`;
-    b.onclick = () => { hiddenMedia.has(m) ? hiddenMedia.delete(m) : hiddenMedia.add(m); updateVisibility(); };
+    b.onclick = () => { set.has(m) ? set.delete(m) : set.add(m); updateVisibility(); };
     nav.appendChild(b);
   });
-  // 동그라미 범례 (지금 보이는 국소 기준 개수)
-  const pc = { high:0, low:0, unknown:0 };
-  stations.filter(s => !hiddenMedia.has(mediaOf(s))).forEach(s => pc[powerClass(s)]++);
   const lg = document.createElement('div'); lg.className = 'legend';
-  lg.innerHTML = Object.entries(POWER_STYLE).filter(([k]) => k !== 'unknown' || pc.unknown)
-    .map(([k, st]) => `<span><i style="--c:${st.color};--s:${st.size}px"></i>${st.label} ${pc[k]}</span>`).join('');
-  nav.appendChild(lg);
-  $('#filters').hidden = stations.length === 0;
-}
-function updateVisibility(){
-  stations.forEach(s => { const p = pins.get(s[F.id]); if (p) p.overlay.setMap(hiddenMedia.has(mediaOf(s)) ? null : map); });
-  renderFilters(); renderList();
-}
-
-/* ---------- 선택 & 상세 보기 ---------- */
-function select(id){
-  const s = stations.find(x => x[F.id] === id); if (!s) return;
-  if (selectedId && pins.get(selectedId)){ const p = pins.get(selectedId); p.el.classList.remove('sel'); p.overlay.setZIndex(p.z); }
-  selectedId = id;
-  const p = pins.get(id);
-  if (p){
-    p.el.classList.add('sel'); p.overlay.setZIndex(10);
-    if (hiddenMedia.has(mediaOf(s))){ hiddenMedia.delete(mediaOf(s)); updateVisibility(); }
+  if (mode === 'st'){
+    const pc = { high:0, low:0, unknown:0 };
+    stations.filter(s => !set.has(mediaOf(s))).forEach(s => pc[powerClass(s)]++);
+    lg.innerHTML = Object.entries(POWER_STYLE).filter(([k]) => k !== 'unknown' || pc.unknown)
+      .map(([k, st]) => `<span><i style="--c:${st.color};--s:${st.size}px"></i>${st.label} ${pc[k]}</span>`).join('');
+  } else {
+    const jc = {}; let none = 0;
+    points.forEach(p => {
+      const vis = p.items.filter(it => !set.has(mediaOf(it))); if (!vis.length) return;
+      const wj = worstJudge(vis); wj ? jc[wj.key] = (jc[wj.key] || 0) + 1 : none++;
+    });
+    lg.innerHTML = Object.entries(JUDGE).map(([k, j]) => `<span><i style="--c:${j.color};--s:${RX_PIN_SIZE}px"></i>${k} ${jc[k] || 0}</span>`).join('')
+      + (none ? `<span><i style="--c:${JUDGE_NONE.color};--s:${RX_PIN_SIZE}px"></i>${JUDGE_NONE.label} ${none}</span>` : '')
+      + (stations.length ? `<span>${TRI_SVG.replace('width="14" height="13"', 'width="11" height="10"')}송중계소</span>` : '');
   }
-  map.panTo(new kakao.maps.LatLng(num(s[F.lat]), num(s[F.lng])));
-  try { history.replaceState(null, '', '#' + encodeURIComponent(id)); } catch(_){}
-  if (isMobile()) $('#listPanel').hidden = true;
-  openDetail(s, true);
+  nav.appendChild(lg);
+}
+function updateVisibility(){ redraw(); renderFilters(); renderList(); }
+
+/* ---------- 선택 ---------- */
+function select(type, id){
+  if (type !== mode) setMode(type, { keepView:true });
+  let lat, lng;
+  if (type === 'st'){ const s = stations.find(x => x[F.id] === id); if (!s) return; lat = num(s[F.lat]); lng = num(s[F.lng]);
+    if (hidden.st.has(mediaOf(s))){ hidden.st.delete(mediaOf(s)); updateVisibility(); } }
+  else { const p = points.find(x => x.pid === id); if (!p) return; lat = p.lat; lng = p.lng;
+    if (!p.items.some(it => !hidden.rx.has(mediaOf(it)))){ hidden.rx.clear(); updateVisibility(); } }
+  selected = { type, id };
+  markSelected(type + ':' + id);
+  map.panTo(new kakao.maps.LatLng(lat, lng));
+  setHash(type === 'st' ? id : 'p-' + id);
+  if (isMobile()){ $('#listPanel').hidden = true; syncListClass(); }
+  if (type === 'st') openStDetail(stations.find(x => x[F.id] === id));
+  else openRxDetail(points.find(x => x.pid === id));
 }
 function deselect(){
-  if (selectedId && pins.get(selectedId)){ const p = pins.get(selectedId); p.el.classList.remove('sel'); p.overlay.setZIndex(p.z); }
-  selectedId = null;
-  try { history.replaceState(null, '', location.pathname + location.search); } catch(_){}
+  markSelected(null); selected = null;
+  setHash(mode === 'rx' ? 'rx' : '');
 }
-function kakaoLink(kind, s){
-  const name = String(s[F.name] || '송중계소').replace(/,/g, ' ');
-  return `https://map.kakao.com/link/${kind}/${encodeURIComponent(name)},${num(s[F.lat])},${num(s[F.lng])}`;
+function closeSheet(){
+  $('#sheet').hidden = true; sheetMode = null;
+  clearTemp(); clearLines(); deselect();
 }
-function openDetail(s){
-  sheetMode = 'detail';
+
+/* ---------- ① 송중계소 상세 ---------- */
+function openStDetail(s){
+  sheetMode = 'detail'; clearLines();
   const media = mediaOf(s), c = colorOf(media);
-  const rows = headers.filter(h => !NOT_IN_DETAIL.has(h) && String(s[h] ?? '').trim() !== '')
+  const rows = stHeaders.filter(h => !ST_NOT_IN_DETAIL.has(h) && str(s[h]) !== '')
     .map(h => `<tr><th>${esc(h)}</th><td>${esc(s[h])}</td></tr>`).join('');
   const lat = num(s[F.lat]).toFixed(6), lng = num(s[F.lng]).toFixed(6);
   const el = $('#sheet');
@@ -471,8 +652,8 @@ function openDetail(s){
       <div class="coords">📍 ${lat}, ${lng} <button class="btn small" data-copy>좌표 복사</button></div>
       ${s[F.updated] ? `<div class="meta">마지막 수정: ${esc(s[F.updated])}</div>` : ''}
       <div class="links">
-        <a class="btn" href="${kakaoLink('map', s)}" target="_blank" rel="noopener">카카오맵에서 보기</a>
-        <a class="btn" href="${kakaoLink('to', s)}" target="_blank" rel="noopener">길찾기</a>
+        <a class="btn" href="${kakaoLink('map', s[F.name], lat, lng)}" target="_blank" rel="noopener">카카오맵에서 보기</a>
+        <a class="btn" href="${kakaoLink('to', s[F.name], lat, lng)}" target="_blank" rel="noopener">길찾기</a>
       </div>
     </div>
     <div class="p-foot edit-only">
@@ -481,94 +662,293 @@ function openDetail(s){
       <button class="btn danger" data-del style="margin-left:auto">삭제</button>
     </div>`;
   el.hidden = false;
-  el.querySelector('[data-close]').onclick = () => { closeSheet(); };
-  el.querySelector('[data-copy]').onclick = async () => {
-    try { await navigator.clipboard.writeText(`${lat}, ${lng}`); toast('좌표를 복사했어요'); } catch(_){ toast(`${lat}, ${lng}`); }
+  el.querySelector('[data-close]').onclick = closeSheet;
+  el.querySelector('[data-copy]').onclick = () => copyCoords(lat, lng);
+  el.querySelector('[data-edit]').onclick = () => openStForm(s);
+  el.querySelector('[data-move]').onclick = () => startMove('st', s[F.id], s[F.name]);
+  el.querySelector('[data-del]').onclick = async () => {
+    const ok = await modal({ title:'삭제할까요?', body:`<b>${esc(s[F.name] || '')}</b>을(를) 지도와 구글 시트에서 지웁니다. 되돌릴 수 없어요.`, ok:'삭제', danger:true });
+    if (!ok) return;
+    try { const j = await api('delete', { sheet:'st', id:s[F.id] }); closeSheet(); applyData(j); toast('삭제했어요'); } catch(e){ toast(e.message, true); }
   };
-  el.querySelector('[data-edit]').onclick = () => openForm(s);
-  el.querySelector('[data-move]').onclick = () => startMove(s);
-  el.querySelector('[data-del]').onclick = () => removeStation(s);
 }
-function closeSheet(){
-  $('#sheet').hidden = true; sheetMode = null;
-  clearTemp(); deselect();
+async function copyCoords(lat, lng){
+  try { await navigator.clipboard.writeText(`${lat}, ${lng}`); toast('좌표를 복사했어요'); } catch(_){ toast(`${lat}, ${lng}`); }
 }
 
-/* ---------- 입력 폼 (추가 / 수정) ---------- */
-function openForm(s, lat, lng){
-  sheetMode = 'form';
-  if (isMobile()) $('#listPanel').hidden = true;
+/* ---------- ② 수신지점 상세 ---------- */
+function findStation(name){
+  const n = str(name).replace(/\s+/g, ''); if (!n) return null;
+  const exact = stations.find(s => str(s[F.name]).replace(/\s+/g, '') === n);
+  if (exact) return exact;
+  const part = stations.filter(s => { const sn = str(s[F.name]).replace(/\s+/g, ''); return sn && (sn.includes(n) || n.includes(sn)); });
+  return part.length === 1 ? part[0] : null;
+}
+function clearLines(){ lines.forEach(l => l.setMap(null)); lines = []; }
+function openRxDetail(p){
+  sheetMode = 'detail'; clearLines();
+  const wj = worstJudge(p.items);
+  const lat = p.lat.toFixed(6), lng = p.lng.toFixed(6);
+  const el = $('#sheet');
+  const cards = p.items.map(it => {
+    const st = findStation(it[R.target]);
+    let distTxt = '';
+    if (st){
+      const d = distKm(p.lat, p.lng, num(st[F.lat]), num(st[F.lng]));
+      distTxt = ` (${d < 10 ? d.toFixed(2) : d.toFixed(1)} km)`;
+      const line = new kakao.maps.Polyline({ path:[new kakao.maps.LatLng(p.lat, p.lng), new kakao.maps.LatLng(num(st[F.lat]), num(st[F.lng]))],
+        strokeWeight:2, strokeColor:judgeColor(it[R.judge]), strokeOpacity:.85, strokeStyle:'shortdash' });
+      line.setMap(map); lines.push(line);
+    }
+    const rows = rxHeaders.filter(h => !RX_CARD_SKIP.has(h) && str(it[h]) !== '')
+      .map(h => `<tr><th>${esc(h)}</th><td>${esc(it[h])}${h === R.target ? esc(distTxt) : ''}</td></tr>`).join('');
+    const title = [it[R.ch], it[R.bc]].map(str).filter(Boolean).join(' · ') || '측정값';
+    const jk = str(it[R.judge]);
+    return `<div class="mcard${hidden.rx.has(mediaOf(it)) ? ' dim' : ''}" data-id="${esc(it[R.id])}">
+      <div class="mh"><span class="badge" style="--c:${colorOf(mediaOf(it))}">${esc(mediaOf(it))}</span>
+        <div class="mt">${esc(title)}</div>
+        <span class="badge" style="--c:${judgeColor(jk)}">${esc(jk || '판정 없음')}</span></div>
+      ${rows ? `<table class="spec">${rows}</table>` : ''}
+      <div class="acts"><button class="btn small" data-medit>수정</button><button class="btn small danger" data-mdel>삭제</button></div>
+    </div>`;
+  }).join('');
+  el.innerHTML = `
+    <div class="p-head"><span class="badge" style="--c:${wj ? wj.color : JUDGE_NONE.color}">${esc(wj ? wj.key : JUDGE_NONE.label)}</span>
+      <h2>${esc(p.name || '(이름 없음)')}</h2><button class="p-close" data-close>✕</button></div>
+    <div class="p-body">
+      <div class="pinfo">${p.addr ? esc(p.addr) + '<br>' : ''}📍 ${lat}, ${lng} <button class="btn small" data-copy>좌표 복사</button></div>
+      <div class="sec-title">측정 ${p.items.length}건</div>
+      ${cards}
+      <div class="links">
+        <a class="btn" href="${kakaoLink('map', p.name, lat, lng)}" target="_blank" rel="noopener">카카오맵에서 보기</a>
+        <a class="btn" href="${kakaoLink('to', p.name, lat, lng)}" target="_blank" rel="noopener">길찾기</a>
+      </div>
+    </div>
+    <div class="p-foot edit-only">
+      <button class="btn primary" data-add>+ 측정 추가</button>
+      <button class="btn" data-rename>이름 바꾸기</button>
+      <button class="btn" data-move>위치 옮기기</button>
+      <button class="btn danger" data-del style="margin-left:auto">지점 삭제</button>
+    </div>`;
+  el.hidden = false;
+  el.querySelector('[data-close]').onclick = closeSheet;
+  el.querySelector('[data-copy]').onclick = () => copyCoords(lat, lng);
+  el.querySelectorAll('.mcard').forEach(card => {
+    const it = p.items.find(x => x[R.id] === card.dataset.id);
+    card.querySelector('[data-medit]').onclick = () => openRxForm({ p, it });
+    card.querySelector('[data-mdel]').onclick = async () => {
+      const ok = await modal({ title:'측정값을 삭제할까요?', body:`<b>${esc(mediaOf(it))} ${esc(it[R.ch] || '')}</b> 측정값을 지웁니다.${p.items.length === 1 ? '<br>마지막 측정이라 지점도 함께 사라져요.' : ''}`, ok:'삭제', danger:true });
+      if (!ok) return;
+      try { const j = await api('delete', { sheet:'rx', id:it[R.id] }); applyData(j); toast('삭제했어요'); } catch(e){ toast(e.message, true); }
+    };
+  });
+  el.querySelector('[data-add]').onclick = () => openRxForm({ p });
+  el.querySelector('[data-rename]').onclick = async () => {
+    const name = await modal({ title:'지점 이름 바꾸기', body:'새 지점명을 입력하세요.', ok:'바꾸기', input:{ type:'text', value:p.name } });
+    if (name == null || !str(name) || str(name) === p.name) return;
+    try { const j = await api('updateWhere', { sheet:'rx', field:R.pid, value:p.pid, record:{ [R.name]: str(name) } }); applyData(j); toast('이름을 바꿨어요'); }
+    catch(e){ toast(e.message, true); }
+  };
+  el.querySelector('[data-move]').onclick = () => startMove('rx', p.pid, p.name);
+  el.querySelector('[data-del]').onclick = async () => {
+    const ok = await modal({ title:'지점을 삭제할까요?', body:`<b>${esc(p.name)}</b>의 측정값 ${p.items.length}건을 모두 지웁니다. 되돌릴 수 없어요.`, ok:'모두 삭제', danger:true });
+    if (!ok) return;
+    try { const j = await api('deleteWhere', { sheet:'rx', field:R.pid, value:p.pid }); closeSheet(); applyData(j); toast('지점을 삭제했어요'); }
+    catch(e){ toast(e.message, true); }
+  };
+}
+
+/* ---------- 입력 칸 만들기 ---------- */
+let fieldSeq = 0;
+function datalistFor(opts){
+  const dl = document.createElement('datalist'); dl.id = 'dl' + (fieldSeq++);
+  [...opts].forEach(o => { const op = document.createElement('option'); op.value = o; dl.appendChild(op); });
+  return dl;
+}
+function makeSeg(name, options, value, colors){
+  const wrap = document.createElement('div'); wrap.className = 'seg';
+  const hid = document.createElement('input'); hid.type = 'hidden'; hid.name = name; hid.value = value || '';
+  const opts = [...options]; if (value && !opts.includes(value)) opts.push(value);
+  const sync = () => wrap.querySelectorAll('button').forEach(x => x.classList.toggle('on', x.dataset.v === hid.value));
+  opts.forEach(o => {
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = o; b.dataset.v = o;
+    if (colors && colors[o]) b.style.setProperty('--c', colors[o]);
+    b.onclick = () => { hid.value = hid.value === o ? '' : o; sync(); hid.dispatchEvent(new Event('change')); };
+    wrap.appendChild(b);
+  });
+  wrap.appendChild(hid); sync();
+  return wrap;
+}
+// h: 열 이름, opts: {required, suggest:[...], segment:[...], segColors, textarea, placeholder}
+function buildField(h, value, opts = {}){
+  const wrap = document.createElement('div'); wrap.className = 'field'; wrap.dataset.field = h;
+  const label = document.createElement(opts.segment ? 'div' : 'label');
+  label.className = 'flabel';
+  label.innerHTML = esc(h) + (opts.required ? ' <span class="req">*</span>' : '');
+  wrap.appendChild(label);
+  if (opts.segment){ wrap.appendChild(makeSeg(h, opts.segment, value, opts.segColors)); return wrap; }
+  const input = document.createElement(opts.textarea ? 'textarea' : 'input');
+  if (!opts.textarea) input.type = 'text';
+  if (h === '위도' || h === '경도') input.inputMode = 'decimal';
+  if (opts.placeholder) input.placeholder = opts.placeholder;
+  input.name = h; input.value = value ?? '';
+  label.htmlFor = input.id = 'f' + (fieldSeq++);
+  if (opts.suggest && opts.suggest.size){ const dl = datalistFor(opts.suggest); wrap.appendChild(dl); input.setAttribute('list', dl.id); }
+  wrap.appendChild(input);
+  return wrap;
+}
+function distinct(rows, h){ return rows.map(r => str(r[h])).filter(Boolean); }
+
+/* ---------- ① 송중계소 입력 ---------- */
+function openStForm(s, lat, lng){
+  sheetMode = 'form'; clearLines();
+  if (isMobile()){ $('#listPanel').hidden = true; syncListClass(); }
   const isNew = !s;
   const vals = isNew ? { [F.lat]: lat.toFixed(6), [F.lng]: lng.toFixed(6) } : { ...s };
-  const fields = headers.filter(h => !NOT_IN_FORM.has(h));
+  const fields = stHeaders.filter(h => !ST_NOT_IN_FORM.has(h));
   const el = $('#sheet');
   el.innerHTML = `
     <div class="p-head"><h2>${isNew ? '새 송중계소 추가' : '정보 수정'}</h2><button class="p-close" data-close>✕</button></div>
     <form class="p-body" id="stForm" autocomplete="off"></form>
-    <div class="p-foot">
-      <button class="btn" data-cancel>취소</button>
-      <button class="btn primary" data-save style="margin-left:auto">저장</button>
-    </div>`;
-  const form = el.querySelector('#stForm');
-  if (isNew) form.insertAdjacentHTML('beforeend', '<div class="hint">빨간 핀 위치로 좌표와 주소가 자동으로 채워져요. 비어 있는 칸은 그냥 두셔도 돼요.</div>');
-  let i = 0, pairOpen = null;
-  for (const h of fields){
-    const wrap = document.createElement('div'); wrap.className = 'field';
-    const required = h === F.name || h === F.lat || h === F.lng;
-    const label = document.createElement('label'); label.innerHTML = esc(h) + (required ? ' <span class="req">*</span>' : '');
-    let input;
-    if (h === F.memo){ input = document.createElement('textarea'); }
-    else {
-      input = document.createElement('input'); input.type = 'text';
-      if (h === F.lat || h === F.lng) input.inputMode = 'decimal';
-      if (h === POWER_FIELD) input.placeholder = '단위까지 입력 (예: 500W, 2kW)';
-      const opts = new Set([...(SUGGEST[h] || []), ...stations.map(x => String(x[h] ?? '').trim()).filter(Boolean)]);
-      if ((SUGGEST[h] || h === '방송사') && opts.size){
-        const dl = document.createElement('datalist'); dl.id = 'dl' + (i++);
-        opts.forEach(o => { const op = document.createElement('option'); op.value = o; dl.appendChild(op); });
-        wrap.appendChild(dl); input.setAttribute('list', dl.id);
-      }
-    }
-    input.name = h; input.value = vals[h] ?? '';
-    label.htmlFor = input.id = 'f_' + i++;
-    wrap.prepend(label); wrap.appendChild(input);
-    // 위도·경도는 한 줄에 나란히
-    if (h === F.lat || h === F.lng){
-      if (!pairOpen){ pairOpen = document.createElement('div'); pairOpen.className = 'row2'; form.appendChild(pairOpen); }
-      pairOpen.appendChild(wrap);
-    } else form.appendChild(wrap);
-  }
+    <div class="p-foot"><button class="btn" data-cancel>취소</button><button class="btn primary" data-save style="margin-left:auto">저장</button></div>`;
+  const form = el.querySelector('form');
+  if (isNew) form.insertAdjacentHTML('beforeend', '<div class="hint">검은 핀 위치로 좌표와 주소가 자동으로 채워져요. 비어 있는 칸은 그냥 두셔도 돼요.</div>');
+  let pair = null;
+  fields.forEach(h => {
+    const suggest = (SUGGEST[h] || h === '방송사') ? new Set([...(SUGGEST[h] || []), ...distinct(stations, h)]) : null;
+    const w = buildField(h, vals[h], { required: h === F.name || h === F.lat || h === F.lng, suggest, textarea: h === F.memo,
+      placeholder: h === POWER_FIELD ? '단위까지 입력 (예: 500W, 2kW)' : '' });
+    if (h === F.lat || h === F.lng){ if (!pair){ pair = document.createElement('div'); pair.className = 'row2'; form.appendChild(pair); } pair.appendChild(w); }
+    else form.appendChild(w);
+  });
   el.hidden = false;
-  const field = name => form.elements.namedItem(name);
-  // 새로 추가할 때 주소 자동 채우기
-  if (isNew && field(F.addr) && !field(F.addr).value){
+  const field = n => form.elements.namedItem(n);
+  if (isNew && field(F.addr) && !field(F.addr).value)
     reverseGeocode(lat, lng).then(a => { if (a && field(F.addr) && !field(F.addr).value) field(F.addr).value = a; });
-  }
-  const cancel = () => { if (isNew){ closeSheet(); } else openDetail(s); };
+  const cancel = () => isNew ? closeSheet() : openStDetail(s);
   el.querySelector('[data-close]').onclick = cancel;
   el.querySelector('[data-cancel]').onclick = cancel;
   form.onsubmit = e => { e.preventDefault(); el.querySelector('[data-save]').click(); };
   el.querySelector('[data-save]').onclick = async ev => {
-    const btn = ev.currentTarget;
-    const rec = {};
+    const btn = ev.currentTarget, rec = {};
     fields.forEach(h => { const f = field(h); if (f) rec[h] = f.value.trim(); });
-    if (headers.includes(F.name) && !rec[F.name]) { toast('국소명을 입력해 주세요', true); field(F.name)?.focus(); return; }
-    if (!Number.isFinite(num(rec[F.lat])) || !Number.isFinite(num(rec[F.lng]))) { toast('위도·경도는 숫자로 입력해 주세요', true); return; }
-    btn.disabled = true; btn.innerHTML = '<span class="spin"></span> 저장 중';
-    try {
-      const j = isNew ? await api('add', { record: rec }) : await api('update', { id: s[F.id], record: rec });
-      clearTemp();
-      const newId = isNew ? j.id : s[F.id];
-      selectedId = null;
-      applyData(j);
+    if (stHeaders.includes(F.name) && !rec[F.name]){ toast('국소명을 입력해 주세요', true); field(F.name)?.focus(); return; }
+    if (!Number.isFinite(num(rec[F.lat])) || !Number.isFinite(num(rec[F.lng]))){ toast('위도·경도는 숫자로 입력해 주세요', true); return; }
+    await saving(btn, async () => {
+      const j = isNew ? await api('add', { sheet:'st', record:rec }) : await api('update', { sheet:'st', id:s[F.id], record:rec });
+      clearTemp(); const id = isNew ? j.id : s[F.id];
+      selected = null; applyData(j);
       toast(isNew ? '추가했어요' : '저장했어요');
-      if (newId && stations.find(x => x[F.id] === newId)) select(newId); else closeSheet();
-    } catch(e){
-      toast(e.message, true); btn.disabled = false; btn.textContent = '저장';
-      if (/비밀번호/.test(e.message)){ password = null; store('stmap_pw', null); }
-    }
+      if (id && stations.find(x => x[F.id] === id)) select('st', id); else closeSheet();
+    });
   };
   setTimeout(() => field(F.name)?.focus(), 100);
+}
+async function saving(btn, fn){
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> 저장 중';
+  try { await fn(); }
+  catch(e){
+    toast(e.message, true); btn.disabled = false; btn.textContent = '저장';
+    if (/비밀번호/.test(e.message)){ password = null; store('stmap_pw', null); }
+  }
+}
+
+/* ---------- ② 수신지점 입력 ---------- */
+// {lat,lng}: 새 지점 / {p}: 이 지점에 측정 추가 / {p, it}: 측정값 수정
+function openRxForm({ p = null, it = null, lat, lng }){
+  if (!rxSupported){ toast('구글 Apps Script를 새 버전(Code.gs 2판)으로 바꿔야 저장할 수 있어요', true); clearTemp(); return; }
+  sheetMode = 'form'; clearLines();
+  if (isMobile()){ $('#listPanel').hidden = true; syncListClass(); }
+  const isNewPoint = !p, isEdit = !!it;
+  const vals = isEdit ? { ...it } : { [R.time]: nowStr(), [R.who]: lsGet('rx_who') };
+  if (isNewPoint){ vals[R.lat] = lat.toFixed(6); vals[R.lng] = lng.toFixed(6); }
+  const specific = new Set(Object.values(RX_MEDIA_FIELDS).flat());
+  const measFields = rxHeaders.filter(h => !RX_SYSTEM.has(h) && !RX_LOCATION.includes(h));
+  measFields.sort((a, b) => (b === R.media) - (a === R.media));   // 매체를 맨 앞으로
+  const el = $('#sheet');
+  el.innerHTML = `
+    <div class="p-head"><h2>${isNewPoint ? '새 수신지점 추가' : isEdit ? '측정값 수정' : '측정 추가'}</h2><button class="p-close" data-close>✕</button></div>
+    <form class="p-body" id="rxForm" autocomplete="off"></form>
+    <div class="p-foot"><button class="btn" data-cancel>취소</button><button class="btn primary" data-save style="margin-left:auto">저장</button></div>`;
+  const form = el.querySelector('form');
+  if (isNewPoint){
+    form.insertAdjacentHTML('beforeend', '<div class="hint">검은 핀 위치로 좌표와 주소가 자동으로 채워져요. 같은 지점에서 다른 매체도 측정했다면, 저장한 뒤 "+ 측정 추가"로 이어서 넣으면 돼요.</div>');
+    form.appendChild(buildField(R.name, '', { required:true }));
+    const pair = document.createElement('div'); pair.className = 'row2';
+    pair.appendChild(buildField(R.lat, vals[R.lat], { required:true }));
+    pair.appendChild(buildField(R.lng, vals[R.lng], { required:true }));
+    form.appendChild(pair);
+    if (rxHeaders.includes(R.addr)) form.appendChild(buildField(R.addr, ''));
+    form.insertAdjacentHTML('beforeend', '<div class="sec-title" style="margin-top:6px">측정값</div>');
+  } else {
+    form.insertAdjacentHTML('beforeend', `<div class="form-pt">📍 ${esc(p.name)}</div>`);
+  }
+  const allMeas = meas;
+  measFields.forEach(h => {
+    const o = { required: h === R.media, textarea: h === R.memo };
+    if (RX_SEGMENTS[h]){
+      o.segment = h === R.media ? [...new Set([...RX_MEDIA, ...distinct(allMeas, h)])] : RX_SEGMENTS[h];
+      if (h === R.judge) o.segColors = Object.fromEntries(Object.entries(JUDGE).map(([k, j]) => [k, j.color]));
+    }
+    else if (h === R.target) o.suggest = new Set(distinct(stations, F.name));
+    else if (h === R.bc) o.suggest = new Set([...distinct(allMeas, h), ...distinct(stations, '방송사')]);
+    else if (h === R.who || h === R.ch || h === '수신안테나높이(m)') o.suggest = new Set(distinct(allMeas, h));
+    if (h === R.time) o.placeholder = '예: 2026-11-21 14:30';
+    form.appendChild(buildField(h, vals[h], o));
+  });
+  const field = n => form.elements.namedItem(n);
+  // 매체에 맞는 칸만 보이기
+  const applyMedia = () => {
+    const m = field(R.media) ? field(R.media).value : '';
+    const show = RX_MEDIA_FIELDS[m];
+    form.querySelectorAll('.field').forEach(w => {
+      const h = w.dataset.field; if (!specific.has(h)) return;
+      w.hidden = !m ? true : show ? !show.includes(h) : false;
+    });
+    const hint = form.querySelector('.media-hint');
+    if (hint) hint.hidden = !!m;
+  };
+  if (field(R.media)){
+    const mw = form.querySelector(`.field[data-field="${R.media}"]`);
+    mw.insertAdjacentHTML('afterend', '<div class="hint media-hint">매체를 고르면 그 매체에 맞는 측정 칸이 나타나요.</div>');
+    field(R.media).addEventListener('change', applyMedia);
+  }
+  applyMedia();
+  el.hidden = false;
+  if (isNewPoint && field(R.addr))
+    reverseGeocode(lat, lng).then(a => { if (a && field(R.addr) && !field(R.addr).value) field(R.addr).value = a; });
+
+  const cancel = () => isNewPoint ? closeSheet() : openRxDetail(p);
+  el.querySelector('[data-close]').onclick = cancel;
+  el.querySelector('[data-cancel]').onclick = cancel;
+  form.onsubmit = e => { e.preventDefault(); el.querySelector('[data-save]').click(); };
+  el.querySelector('[data-save]').onclick = async ev => {
+    const btn = ev.currentTarget, rec = {};
+    measFields.forEach(h => {
+      const f = field(h); if (!f) return;
+      const w = form.querySelector(`.field[data-field="${CSS.escape(h)}"]`);
+      rec[h] = w && w.hidden ? '' : f.value.trim();     // 숨긴 칸(다른 매체용)은 비워서 저장
+    });
+    if (!rec[R.media]){ toast('매체를 골라 주세요', true); return; }
+    if (isNewPoint){
+      rec[R.name] = field(R.name).value.trim(); rec[R.lat] = field(R.lat).value.trim(); rec[R.lng] = field(R.lng).value.trim();
+      if (field(R.addr)) rec[R.addr] = field(R.addr).value.trim();
+      if (!rec[R.name]){ toast('지점명을 입력해 주세요', true); field(R.name).focus(); return; }
+      if (!Number.isFinite(num(rec[R.lat])) || !Number.isFinite(num(rec[R.lng]))){ toast('위도·경도는 숫자로 입력해 주세요', true); return; }
+    } else if (!isEdit){
+      Object.assign(rec, { [R.pid]: p.pid.startsWith('_') ? '' : p.pid, [R.name]: p.name, [R.lat]: String(p.lat), [R.lng]: String(p.lng), [R.addr]: p.addr });
+    }
+    if (rec[R.who]) lsSet('rx_who', rec[R.who]);
+    await saving(btn, async () => {
+      const j = isEdit ? await api('update', { sheet:'rx', id:it[R.id], record:rec }) : await api('add', { sheet:'rx', record:rec });
+      clearTemp();
+      const pid = isNewPoint ? j.pid : p.pid;
+      selected = null; applyData(j);
+      toast(isEdit ? '저장했어요' : '추가했어요');
+      if (pid && points.find(x => x.pid === pid)) select('rx', pid); else closeSheet();
+    });
+  };
+  setTimeout(() => (isNewPoint ? field(R.name) : null)?.focus(), 100);
 }
 
 function reverseGeocode(lat, lng){
@@ -582,37 +962,29 @@ function reverseGeocode(lat, lng){
   });
 }
 
-/* ---------- 위치 옮기기 / 삭제 ---------- */
-function startMove(s){
-  moveTargetId = s[F.id];
-  $('#editBannerText').textContent = `'${s[F.name] || '선택한 국소'}'의 새 위치를 지도에서 누르세요`;
+/* ---------- 위치 옮기기 ---------- */
+function startMove(type, id, name){
+  moveTarget = { type, id, name };
+  $('#editBannerText').textContent = `'${name || '선택한 곳'}'의 새 위치를 지도에서 누르세요`;
   if (isMobile()) $('#sheet').hidden = true;
   toast('지도에서 새 위치를 눌러 주세요');
 }
-function endMove(){
-  moveTargetId = null;
-  $('#editBannerText').textContent = '편집 모드 · 지도를 눌러 새 송중계소를 추가하세요';
-}
+function endMove(){ moveTarget = null; $('#editBannerText').textContent = editBannerText(); }
 async function finishMove(lat, lng){
-  const s = stations.find(x => x[F.id] === moveTargetId); if (!s){ endMove(); return; }
+  const t = moveTarget; if (!t){ return; }
   showTemp(lat, lng);
-  const addr = headers.includes(F.addr) ? await reverseGeocode(lat, lng) : '';
-  const ok = await modal({ title: '위치를 옮길까요?',
-    body: `<b>${esc(s[F.name] || '')}</b>을(를) 이 위치로 옮깁니다.<br><span style="color:#6b7280;font-size:13px">${lat.toFixed(6)}, ${lng.toFixed(6)}${addr ? '<br>' + esc(addr) : ''}</span>`,
-    ok: '옮기기' });
-  if (!ok){ clearTemp(); return; }   // 다시 다른 곳을 누를 수 있도록 이동 모드 유지
-  const rec = { [F.lat]: lat.toFixed(6), [F.lng]: lng.toFixed(6) };
-  if (addr) rec[F.addr] = addr;
+  const addr = await reverseGeocode(lat, lng);
+  const ok = await modal({ title:'위치를 옮길까요?',
+    body:`<b>${esc(t.name || '')}</b>을(를) 이 위치로 옮깁니다.<br><span style="color:#6b7280;font-size:13px">${lat.toFixed(6)}, ${lng.toFixed(6)}${addr ? '<br>' + esc(addr) : ''}</span>`, ok:'옮기기' });
+  if (!ok){ clearTemp(); return; }   // 다른 곳을 다시 누를 수 있게 이동 모드 유지
+  const rec = { '위도': lat.toFixed(6), '경도': lng.toFixed(6) };
+  if (addr && (t.type === 'st' ? stHeaders : rxHeaders).includes('주소')) rec['주소'] = addr;
   try {
-    const j = await api('update', { id: s[F.id], record: rec });
-    clearTemp(); endMove(); selectedId = null; applyData(j); select(s[F.id]); toast('위치를 옮겼어요');
+    const j = t.type === 'st'
+      ? await api('update', { sheet:'st', id:t.id, record:rec })
+      : await api('updateWhere', { sheet:'rx', field:R.pid, value:t.id, record:rec });
+    clearTemp(); endMove(); selected = null; applyData(j); select(t.type, t.id); toast('위치를 옮겼어요');
   } catch(e){ clearTemp(); toast(e.message, true); }
-}
-async function removeStation(s){
-  const ok = await modal({ title: '삭제할까요?', body: `<b>${esc(s[F.name] || '')}</b>을(를) 지도와 구글 시트에서 지웁니다. 되돌릴 수 없어요.`, ok: '삭제', danger: true });
-  if (!ok) return;
-  try { const j = await api('delete', { id: s[F.id] }); closeSheet(); applyData(j); toast('삭제했어요'); }
-  catch(e){ toast(e.message, true); }
 }
 
 /* ---------- 임시 핀 ---------- */
@@ -628,7 +1000,7 @@ function clearTemp(){ if (tempOverlay){ tempOverlay.setMap(null); tempOverlay = 
 async function toggleEdit(){
   if (editMode){ setEdit(false); return; }
   if (!password && !DEMO){
-    const pw = await modal({ title: '편집 비밀번호', body: '구글 Apps Script에 정해 둔 편집 비밀번호를 입력하세요.', ok: '확인', input: { type: 'password', placeholder: '비밀번호' } });
+    const pw = await modal({ title:'편집 비밀번호', body:'구글 Apps Script에 정해 둔 편집 비밀번호를 입력하세요.', ok:'확인', input:{ type:'password', placeholder:'비밀번호' } });
     if (pw == null || pw === '') return;
     try { await api('check', {}, pw); password = pw; store('stmap_pw', pw); }
     catch(e){ toast(e.message, true); return; }
@@ -640,34 +1012,49 @@ function setEdit(on){
   document.body.classList.toggle('editing', on);
   $('#btnEdit').classList.toggle('on', on);
   $('#btnEdit').textContent = on ? '✏️ 편집 중' : '✏️ 편집';
+  $('#editBannerText').textContent = editBannerText();
   $('#editBanner').hidden = !on;
   map.setCursor(on ? 'crosshair' : '');
   if (!on){ endMove(); if (sheetMode === 'form') closeSheet(); clearTemp(); }
-  else toast('지도를 누르면 그 위치에 새 송중계소를 추가할 수 있어요');
+  else toast(mode === 'st' ? '지도를 누르면 새 송중계소를 추가할 수 있어요' : '지도를 누르면 새 수신지점을 추가할 수 있어요');
 }
 
 /* ---------- 목록 ---------- */
 function renderList(){
   const el = $('#listPanel'); if (el.hidden) return;
   const q = $('#search').value.trim().toLowerCase();
-  const vis = stations.filter(s => !hiddenMedia.has(mediaOf(s)) && (!q || matches(s, q)))
-    .sort((a, b) => mediaOf(a).localeCompare(mediaOf(b), 'ko') || String(a[F.name]).localeCompare(String(b[F.name]), 'ko'));
-  el.innerHTML = `<div class="p-head"><h2>목록 <span style="color:#6b7280;font-weight:500;font-size:14px">${vis.length}곳</span></h2><button class="p-close" data-close>✕</button></div>
+  let items;
+  if (mode === 'st'){
+    items = stations.filter(s => !hidden.st.has(mediaOf(s)) && (!q || rowMatches(s, stHeaders, q)))
+      .sort((a, b) => mediaOf(a).localeCompare(mediaOf(b), 'ko') || str(a[F.name]).localeCompare(str(b[F.name]), 'ko'))
+      .map(s => ({ color: POWER_STYLE[powerClass(s)].color, name: s[F.name], onClick: () => select('st', s[F.id]),
+        sub: [mediaOf(s), s['방송사'], s['채널/주파수'], s[F.addr]].map(str).filter(Boolean).join(' · ') }));
+  } else {
+    items = points.filter(p => p.items.some(it => !hidden.rx.has(mediaOf(it))) && (!q || pointMatches(p, q)))
+      .sort((a, b) => a.name.localeCompare(b.name, 'ko'))
+      .map(p => {
+        const vis = p.items.filter(it => !hidden.rx.has(mediaOf(it))), wj = worstJudge(vis);
+        return { color: wj ? wj.color : JUDGE_NONE.color, name: p.name, onClick: () => select('rx', p.pid),
+          sub: [[...new Set(vis.map(mediaOf))].join('·'), p.addr].filter(Boolean).join(' · ') };
+      });
+  }
+  const unit = mode === 'st' ? '송중계소' : '수신지점';
+  el.innerHTML = `<div class="p-head"><h2>${unit} 목록 <span style="color:#6b7280;font-weight:500;font-size:14px">${items.length}곳</span></h2><button class="p-close" data-close>✕</button></div>
     <div class="p-body" id="listBody"></div>`;
   const body = el.querySelector('#listBody');
-  if (!vis.length) body.innerHTML = `<div class="empty">${stations.length ? '조건에 맞는 국소가 없어요.' : '아직 등록된 송중계소가 없어요.<br>위쪽 ✏️ 편집을 누르고 지도를 눌러 추가해 보세요.'}</div>`;
-  vis.forEach(s => {
-    const d = document.createElement('div'); d.className = 'li'; d.style.setProperty('--c', POWER_STYLE[powerClass(s)].color);
-    const sub = [mediaOf(s), s['방송사'], s['채널/주파수'], s[F.addr]].filter(v => String(v ?? '').trim()).map(esc).join(' · ');
-    d.innerHTML = `<span class="d"></span><div><div class="n">${esc(s[F.name] || '(이름 없음)')}</div><div class="s">${sub}</div></div>`;
-    d.onclick = () => select(s[F.id]);
-    body.appendChild(d);
+  const total = mode === 'st' ? stations.length : points.length;
+  if (!items.length) body.innerHTML = `<div class="empty">${total ? '조건에 맞는 곳이 없어요.' : `아직 등록된 ${unit}이(가) 없어요.<br>위쪽 ✏️ 편집을 누르고 지도를 눌러 추가해 보세요.`}</div>`;
+  items.forEach(i => {
+    const d = document.createElement('div'); d.className = 'li'; d.style.setProperty('--c', i.color);
+    d.innerHTML = `<span class="d"></span><div><div class="n">${esc(i.name || '(이름 없음)')}</div><div class="s">${esc(i.sub)}</div></div>`;
+    d.onclick = i.onClick; body.appendChild(d);
   });
   el.querySelector('[data-close]').onclick = () => { el.hidden = true; syncListClass(); };
 }
 function syncListClass(){ document.body.classList.toggle('list-open', !$('#listPanel').hidden); }
-function matches(s, q){
-  return headers.some(h => h !== F.id && String(s[h] ?? '').toLowerCase().includes(q));
+function rowMatches(r, headers, q){ return headers.some(h => h !== 'id' && h !== R.pid && str(r[h]).toLowerCase().includes(q)); }
+function pointMatches(p, q){
+  return p.name.toLowerCase().includes(q) || p.addr.toLowerCase().includes(q) || p.items.some(it => rowMatches(it, rxHeaders, q));
 }
 
 /* ---------- 검색 ---------- */
@@ -676,30 +1063,35 @@ function renderSearch(){
   const box = $('#searchResults');
   if (!q){ box.hidden = true; renderList(); return; }
   const lower = q.toLowerCase();
-  const hits = stations.filter(s => matches(s, lower)).slice(0, 8);
   box.innerHTML = '';
-  if (hits.length){
-    box.insertAdjacentHTML('beforeend', '<div class="sr-head">등록된 송중계소</div>');
-    hits.forEach(s => {
-      const d = document.createElement('div'); d.className = 'sr-item';
-      d.innerHTML = `<span class="badge" style="--c:${colorOf(mediaOf(s))}">${esc(mediaOf(s))}</span><div><div>${esc(s[F.name] || '(이름 없음)')}</div><div class="sr-sub">${esc([s['채널/주파수'], s[F.addr]].filter(Boolean).join(' · '))}</div></div>`;
-      d.onclick = () => { box.hidden = true; select(s[F.id]); map.setLevel(Math.min(map.getLevel(), 7)); };
-      box.appendChild(d);
-    });
+  const add = (badgeColor, badgeText, title, sub, onClick) => {
+    const d = document.createElement('div'); d.className = 'sr-item';
+    d.innerHTML = `<span class="badge" style="--c:${badgeColor}">${esc(badgeText)}</span><div><div>${esc(title)}</div><div class="sr-sub">${esc(sub)}</div></div>`;
+    d.onclick = () => { box.hidden = true; onClick(); map.setLevel(Math.min(map.getLevel(), 7)); };
+    box.appendChild(d);
+  };
+  if (mode === 'st'){
+    const hits = stations.filter(s => rowMatches(s, stHeaders, lower)).slice(0, 8);
+    if (hits.length) box.insertAdjacentHTML('beforeend', '<div class="sr-head">등록된 송중계소</div>');
+    hits.forEach(s => add(colorOf(mediaOf(s)), mediaOf(s), s[F.name] || '(이름 없음)', [s['채널/주파수'], s[F.addr]].map(str).filter(Boolean).join(' · '), () => select('st', s[F.id])));
+  } else {
+    const hits = points.filter(p => pointMatches(p, lower)).slice(0, 8);
+    if (hits.length) box.insertAdjacentHTML('beforeend', '<div class="sr-head">등록된 수신지점</div>');
+    hits.forEach(p => { const wj = worstJudge(p.items);
+      add(wj ? wj.color : JUDGE_NONE.color, wj ? wj.key : '—', p.name || '(이름 없음)', [[...new Set(p.items.map(mediaOf))].join('·'), p.addr].filter(Boolean).join(' · '), () => select('rx', p.pid)); });
   }
-  const p = document.createElement('div'); p.className = 'sr-item';
-  p.innerHTML = `<span>🔎</span><div>'${esc(q)}' 장소 찾아 이동하기<div class="sr-sub">산 이름, 주소, 건물 이름 등</div></div>`;
-  p.onclick = () => searchPlaces(q);
-  box.appendChild(p);
+  const pl = document.createElement('div'); pl.className = 'sr-item';
+  pl.innerHTML = `<span>🔎</span><div>'${esc(q)}' 장소 찾아 이동하기<div class="sr-sub">산 이름, 주소, 건물 이름 등</div></div>`;
+  pl.onclick = () => searchPlaces(q);
+  box.appendChild(pl);
   box.hidden = false;
   renderList();
 }
 function searchPlaces(q){
   const box = $('#searchResults');
-  if (!places){ return; }
+  if (!places) return;
   places.keywordSearch(q, (data, status) => {
     if (status !== kakao.maps.services.Status.OK || !data.length){
-      // 키워드로 안 나오면 주소로 한 번 더
       geocoder.addressSearch(q, (res, st) => {
         if (st === kakao.maps.services.Status.OK && res[0]){ goTo(+res[0].y, +res[0].x); box.hidden = true; }
         else toast('장소를 찾지 못했어요', true);
@@ -717,7 +1109,7 @@ function searchPlaces(q){
 }
 function goTo(lat, lng){
   map.setLevel(6); map.setCenter(new kakao.maps.LatLng(lat, lng));
-  if (editMode) toast('원하는 지점을 눌러 송중계소를 추가하세요');
+  if (editMode) toast(mode === 'st' ? '원하는 지점을 눌러 송중계소를 추가하세요' : '측정한 지점을 눌러 수신지점을 추가하세요');
 }
 
 /* ---------- 내 위치 ---------- */
@@ -728,7 +1120,8 @@ function myLocation(){
     if (meOverlay) meOverlay.setMap(null);
     const el = document.createElement('div'); el.className = 'me-dot';
     meOverlay = new kakao.maps.CustomOverlay({ position: ll, content: el, xAnchor: .5, yAnchor: .5, zIndex: 2 });
-    meOverlay.setMap(map); map.setLevel(6); map.panTo(ll);
+    meOverlay.setMap(map); map.setLevel(5); map.panTo(ll);
+    if (editMode && mode === 'rx') toast('지금 있는 곳을 눌러 수신지점을 추가할 수 있어요');
   }, () => toast('위치를 가져오지 못했어요. 브라우저 위치 권한을 확인하세요.', true), { enableHighAccuracy: true, timeout: 10000 });
 }
 
@@ -749,17 +1142,24 @@ async function init(){
   geocoder = new kakao.maps.services.Geocoder();
   places = new kakao.maps.services.Places();
 
-  const updateZoomClass = () => $('#mapWrap').classList.toggle('far', map.getLevel() > 9);
+  const updateZoomClass = () => {
+    const lv = map.getLevel();
+    $('#mapWrap').classList.toggle('far', lv > 9);
+    $('#mapWrap').classList.toggle('mid', lv > 7);
+  };
   kakao.maps.event.addListener(map, 'zoom_changed', updateZoomClass); updateZoomClass();
   kakao.maps.event.addListener(map, 'click', e => {
     $('#searchResults').hidden = true;
     const lat = e.latLng.getLat(), lng = e.latLng.getLng();
     if (!editMode){ if (sheetMode === 'detail') closeSheet(); return; }
-    if (moveTargetId){ finishMove(lat, lng); return; }
-    deselect(); showTemp(lat, lng); openForm(null, lat, lng);
+    if (moveTarget){ finishMove(lat, lng); return; }
+    if (sheetMode === 'detail') closeSheet(); else deselect();
+    showTemp(lat, lng);
+    mode === 'st' ? openStForm(null, lat, lng) : openRxForm({ lat, lng });
   });
   window.addEventListener('resize', () => map.relayout());
 
+  document.querySelectorAll('.tab').forEach(t => t.onclick = () => setMode(t.dataset.mode));
   $('#btnEdit').onclick = toggleEdit;
   $('#btnEditOff').onclick = () => setEdit(false);
   $('#btnRefresh').onclick = () => refresh(true);
@@ -777,10 +1177,13 @@ async function init(){
     if (e.key === 'Escape'){ $('#searchResults').hidden = true; }
   });
   document.addEventListener('click', e => { if (!e.target.closest('#searchWrap')) $('#searchResults').hidden = true; });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#modal').hidden){ if (moveTargetId){ endMove(); clearTemp(); } else if (!$('#sheet').hidden) closeSheet(); } });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && $('#modal').hidden){ if (moveTarget){ endMove(); clearTemp(); } else if (!$('#sheet').hidden) closeSheet(); }
+  });
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && !DEMO && sheetMode !== 'form') refresh(false); });
 
   password = load('stmap_pw');
+  $('#editBannerText').textContent = editBannerText();
   if (DEMO) $('#demoBanner').hidden = false;
   await refresh(false);
 }
